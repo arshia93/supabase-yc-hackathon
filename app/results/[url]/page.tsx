@@ -3,6 +3,7 @@
 import React, { Usable, useState } from "react";
 import { EventDataTable } from "@/components/ui/event-table";
 import { EventChart } from "@/components/ui/event-chart";
+import { createClient } from '@supabase/supabase-js'
 
 export type EventData = {
   id: string;
@@ -50,6 +51,11 @@ const eventData: EventData[] = [
   },
 ];
 
+function getSupabaseClient() {
+  console.log(process.env)
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!)
+}
+
 export default function EventsPage({ params }: { params: Usable<{ url: string }> }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const unwrappedParams: { url: string } = React.use(params);
@@ -58,6 +64,20 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
   const filteredData: EventData[] = []
 
   const uniquePaths = [...new Set(eventData.map((event) => event.path))];
+
+  
+  const supabase = getSupabaseClient()
+  React.useEffect(() => {
+  const channels = supabase.channel('custom-all-channel')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'route_meta' },
+      (payload: any) => {
+        console.log('Change received!', payload)
+      }
+    )
+    .subscribe()
+  }, [])
 
   return (
     <div className="container mx-auto py-10">
