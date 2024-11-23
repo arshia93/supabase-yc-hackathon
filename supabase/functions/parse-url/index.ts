@@ -86,7 +86,7 @@ async function getNodesToTrack(bodyHtml: string) {
   const response = await anthropic.messages.create({
     model: 'claude-3-5-sonnet-20240620',
     max_tokens: 1000,
-    messages: [{ role: 'user', content: bodyHtml}, { role: 'user', content: 'For the provided HTML, find all element that should be tracked for analytics. Return a JSON list of the elements { haid, eventName } and nothing else.' }],
+    messages: [{ role: 'user', content: bodyHtml}, { role: 'user', content: 'For the provided HTML, find all element that should be tracked for analytics. Return a JSON list of the elements { haid, eventName } and nothing else. eventName should be in snake_case.' }],
   })
 
   return JSON.parse(response.content[0].text)
