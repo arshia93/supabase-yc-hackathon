@@ -31,7 +31,39 @@ Deno.serve(async (req) => {
   const $ = cheerio.load(htmlContent)
   const body = $('body').clone()
   $('script', body).remove()
-  const bodyHtml = body.html()
+
+  // Function to get DOM path
+  function getDomPath($el) {
+    const path: number[] = []
+    let current = $el
+    while (current.parent().length) {
+    
+      const parent = current.parent()
+      const children = parent.children()
+      const index = children.index(current)
+      path.unshift(index)
+      current = parent
+    }
+    
+    return path.join('-')
+  }
+
+  // Walk the DOM tree and add haid attribute
+  function addHaidAttribute($el) {
+    const tagName = $el.prop('tagName')?.toLowerCase() || 'text'
+    const path = getDomPath($el)
+    $el.attr('haid', `${tagName}-${path}`)
+    
+    // Recursively process child nodes
+    $el.children().each((_, child) => {
+      addHaidAttribute($(child))
+    })
+  }
+
+  // Start from body and process entire tree
+  addHaidAttribute(body)
+  
+  const bodyHtml = '<body>' + body.html() + '</body>'
 
   const data = {
     message: `Hello ${url}!`,
