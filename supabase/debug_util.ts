@@ -5,7 +5,7 @@ require("dotenv").config();
 const args = process.argv.slice(2);
 const env = args[0] || "local";
 
-function getSupabaseClient() {
+module.exports.getSupabaseClient = function getSupabaseClient() {
   if (env === "local") {
     return createClient(
       "http://localhost:54321",
@@ -15,14 +15,4 @@ function getSupabaseClient() {
     return createClient(process.env.SUPABASE_URL!, "public-anon-key");
   }
   throw new Error(`Unknown environment: ${env}`);
-}
-
-async function main() {
-  const response = await getSupabaseClient().functions.invoke("parse-url", {
-    body: { url: "https://reactiverobot.com" },
-  });
-
-  console.log(response);
-}
-
-main().catch(console.error);
+};
