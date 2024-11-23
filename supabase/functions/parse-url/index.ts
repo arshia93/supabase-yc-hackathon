@@ -5,6 +5,8 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts'
+import * as cheerio from "https://esm.sh/cheerio@1.0.0-rc.12"
+
 
 console.log("Hello from Functions!")
 
@@ -18,13 +20,27 @@ Deno.serve(async (req) => {
   })
   const page = await browser.newPage()
 
-  await page.goto(url)
+  // Wait until network is idle (no requests for 500ms)
+  await page.goto(url, {
+    waitUntil: 'networkidle0',
+    timeout: 30000 // 30 seconds timeout
+  })
+  const screenshot = await page.screenshot()
   const htmlContent = await page.content()
+
+  const $ = cheerio.load(htmlContent)
+  const body = $('body').clone()
+  $('script', body).remove()
+  const bodyHtml = body.html()
 
   const data = {
     message: `Hello ${url}!`,
     htmlContent,
+    body: bodyHtml,
+    screenshot: `data:image/png;base64,${btoa(String.fromCharCode(...screenshot))}`,
   }
+
+  
 
   return new Response(
     JSON.stringify(data),

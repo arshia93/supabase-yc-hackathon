@@ -6,12 +6,11 @@ require('dotenv').config()
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!)
 
 async function main() {
-    const { data, error } = await supabase.functions.invoke('parse-url', {
-        body: { url: 'https://www.google.com' },
+    const { data } = await supabase.functions.invoke('parse-url', {
+        body: { url: 'https://reactiverobot.com' },
     });
 
-    console.log(data)
-    console.log(error)
+    console.log(data.body)
 }
 
 main().catch(console.error);
