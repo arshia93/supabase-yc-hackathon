@@ -5,6 +5,7 @@ import { EventDataTable } from "@/components/ui/event-table";
 import { EventChart } from "@/components/ui/event-chart";
 import { createClient } from '@supabase/supabase-js'
 import { debug } from "console";
+import { EventDataTableLive } from "@/components/ui/event-table-live";
 
 export type EventDefinition = {
   name: string;
@@ -160,7 +161,11 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
       url,
       (data) => {
         console.log("Event Data", data);
-        setEvents((prevEvents) => [...prevEvents, data]);
+        setEvents((prevEvents) => {
+          let result = [...prevEvents, data]
+          result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          return result
+      });
       },
       (error) => {
         console.error("Error", error);
@@ -199,7 +204,9 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
           <EventDataTable data={eventDefinitions} />
         </div>
         {/* Right column */}
-        <div>{/* Live Events */}</div>
+        <div>
+          <EventDataTableLive data={events} />
+        </div>
       </div>
     </div>
   );
