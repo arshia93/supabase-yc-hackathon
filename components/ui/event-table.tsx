@@ -77,7 +77,6 @@ export function EventDataTable({ data }: EventDataTableProps) {
     },
   })
 
-  console.log(data);
   return (
     <div className="w-full">
       <div className="grid grid-cols-2 items-center py-4">

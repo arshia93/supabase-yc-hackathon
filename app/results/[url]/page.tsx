@@ -7,6 +7,8 @@ import { createClient } from '@supabase/supabase-js'
 import { debug } from "console";
 import { EventDataTableLive } from "@/components/ui/event-table-live";
 import { API_KEY } from "@/app/api";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 export type EventDefinition = {
   name: string;
@@ -129,7 +131,6 @@ function loadAndSubscribeToEvents(domain: string, onData: (data: EventData) => v
 export default function EventsPage({ params }: { params: Usable<{ url: string }> }) {
   const unwrappedParams: { url: string } = React.use(params);
   const url = React.useMemo(() => unwrappedParams.url, [unwrappedParams.url])
-  console.log("URL", url)
   
   const [events, setEvents] = React.useState<EventData[]>([]);
   const [routeMeta, setRouteMeta] = React.useState<RouteMeta[]>([]);
@@ -151,6 +152,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
     return events.filter((event) => selectedPath ? event.route === selectedPath : true);
   }, [events, selectedPath]);
 
+  
   React.useEffect(() => {
     loadAndSubscribeToRouteMeta(
       url,
@@ -180,6 +182,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
 
   const [newRoute, setNewRoute] = useState<string>("")
   const [isAddingRoute, setIsAddingRoute] = useState(false)
+  const { toast } = useToast()  
   const addRoute = async () => {
     setIsAddingRoute(true)
     try {
@@ -197,7 +200,12 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
       });
       const data = await response.json()
       setNewRoute("")
+
       console.log(data)
+      toast({
+        title: "Route " + newRoute + " added successfully.",
+        description: "Load that route to see events.",
+      })
     } catch (error) {
       console.error("Error", error);
     } finally {
@@ -265,6 +273,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
         </div>
       </div>
     </div>
+    <Toaster />
     </>
   );
 }
