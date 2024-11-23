@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
-export default function CrawlWebsitePage() {
+export default function CrawlWebsiteEntryPage() {
   const [url, setUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -48,7 +48,7 @@ export default function CrawlWebsitePage() {
   function handleViewEvents() {
     // In a real application, you'd pass the crawled data to the events page
     // For this example, we'll just navigate to the events page
-    router.push('/events')
+    router.push("/results");
   }
 
   return (
