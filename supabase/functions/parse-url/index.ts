@@ -2,6 +2,10 @@
 // https://deno.land/manual/getting_started/setup_your_environment
 // This enables autocomplete, go to definition, etc.
 
+// steps: 
+// install deno
+// insall deno vscode plugin
+
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts'
