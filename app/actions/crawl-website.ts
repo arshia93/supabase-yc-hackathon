@@ -15,7 +15,7 @@ export async function crawlWebsite(formData: FormData) {
     return { error: 'Invalid URL. Please enter a valid URL starting with http:// or https://' }
   }
 
-  const { url } = validatedFields.data
+  // const { url } = validatedFields.data
 
   // Simulate crawling process
   await new Promise(resolve => setTimeout(resolve, 2000))
