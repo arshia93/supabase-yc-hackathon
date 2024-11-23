@@ -6,6 +6,7 @@ import { EventChart } from "@/components/ui/event-chart";
 import { createClient } from '@supabase/supabase-js'
 import { debug } from "console";
 import { EventDataTableLive } from "@/components/ui/event-table-live";
+import { API_KEY } from "@/app/api";
 
 export type EventDefinition = {
   name: string;
@@ -177,13 +178,59 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
     );
   }, []);
 
+  const [newRoute, setNewRoute] = useState<string>("")
+  const [isAddingRoute, setIsAddingRoute] = useState(false)
+  const addRoute = async () => {
+    setIsAddingRoute(true)
+    try {
+      const response = await fetch('https://qvarloofqmysycykstty.supabase.co/functions/v1/parse-url', {
+        method: 'POST',
+        mode: "cors",
+        headers: {
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json',
+          'apikey': API_KEY
+        },
+        body: JSON.stringify({
+          url: "https://" + url + newRoute,
+        })
+      });
+      const data = await response.json()
+      console.log(data)
+    } catch (error) {
+      console.error("Error", error);
+    } finally {
+      setIsAddingRoute(false)
+    } 
+  }
+
   return (
+    <>
+    <nav className="border-b">
+          <div className="container mx-auto">
+            <div className="flex h-16 items-center justify-between">
+              <div className="flex-shrink-0">
+                <span className="text-xl font-bold">Supatrack</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <input
+                  type="text"
+                  className="rounded-md border border-gray-300 px-3 py-1.5"
+                  placeholder="/pricing"
+                  value={newRoute}
+                  onChange={(e) => setNewRoute(e.target.value)}
+                />
+                <button className="rounded-md bg-primary px-4 py-1.5 text-white" onClick={addRoute} disabled={isAddingRoute}>
+                  {isAddingRoute ? "Adding..." : "Add Route"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
     <div className="container mx-auto py-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Website url */}
-        <div className="mb-6">
           <h1 className="text-2xl font-bold mb-6">{url}</h1>
-        </div>
         {/* toggle paths */}
         <div className="mb-6 flex justify-end">
           <select
@@ -213,5 +260,6 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
         </div>
       </div>
     </div>
+    </>
   );
 }

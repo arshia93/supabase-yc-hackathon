@@ -51,6 +51,16 @@ export default function SetupPage() {
   const trackingScript = `<script src="https://qvarloofqmysycykstty.supabase.co/storage/v1/object/public/track/annotate.js" defer></script>`
 
   return (
+    <>
+    <nav className="border-b">
+          <div className="container mx-auto">
+            <div className="flex h-16 items-center justify-between">
+              <div className="flex-shrink-0">
+                <span className="text-xl font-bold">Supatrack</span>
+              </div>
+            </div>
+          </div>
+        </nav>
     <form onSubmit={handleSubmit}>
       <div className="container mx-auto py-10 space-y-6 max-w-[50%]">
         {/* Step 1 Card */}
@@ -134,6 +144,7 @@ export default function SetupPage() {
         </div>
       </div>
     </form>
+    </>
   )
 }
 
