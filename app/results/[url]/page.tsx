@@ -1,14 +1,13 @@
 "use client";
 
-import React, { Usable, useState } from "react";
-import { EventDataTable } from "@/components/ui/event-table";
-import { EventChart } from "@/components/ui/event-chart";
-import { createClient } from '@supabase/supabase-js'
-import { debug } from "console";
-import { EventDataTableLive } from "@/components/ui/event-table-live";
 import { API_KEY } from "@/app/api";
+import { EventChart } from "@/components/ui/event-chart";
+import { EventDataTable } from "@/components/ui/event-table";
+import { EventDataTableLive } from "@/components/ui/event-table-live";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { createClient } from '@supabase/supabase-js';
+import React, { useState } from "react";
 
 export type EventDefinition = {
   name: string;
@@ -24,44 +23,6 @@ export type EventData = {
   created_at: string;
 };
 
-const eventData: EventData[] = [
-  {
-    id: "m5gr84i9",
-    event: "pay_clicked",
-    event_action: "user clicks pay button",
-    path: "/pay",
-    date: "2024-04-01",
-  },
-  {
-    id: "3u1reuv4",
-    event: "signup_clicked",
-    event_action: "user clicks signup button",
-    path: "/signup",
-    date: "2024-04-01",
-  },
-  {
-    id: "derv1ws0",
-    event: "login_clicked",
-    event_action: "user clicks login button",
-    path: "/login",
-    date: "2024-04-01",
-  },
-  {
-    id: "5kma53ae",
-    event: "search_clicked",
-    event_action: "user clicks search button",
-    path: "/dashboard",
-    date: "2024-04-01",
-  },
-  {
-    id: "bhqecj4p",
-    event: "menu_clicked",
-    event_action: "user clicks menu button",
-    path: "/dashboard",
-    date: "2024-04-01",
-  },
-];
-
 function getSupabaseClient() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!)
 }
@@ -73,7 +34,7 @@ type RouteMeta = {
   meta: {haid: string, eventName: string}[]
 }
 
-function loadAndSubscribeToRouteMeta(domain: string, onData: (data: RouteMeta) => void, onError: (error: any) => void) {
+function loadAndSubscribeToRouteMeta(domain: string, onData: (data: RouteMeta) => void, onError: (error: Error) => void) {
   const supabase = getSupabaseClient()
   supabase
     .from('route_meta')
@@ -83,6 +44,9 @@ function loadAndSubscribeToRouteMeta(domain: string, onData: (data: RouteMeta) =
       data?.forEach((item) => {
         onData(item);
       });
+      if (error) {
+        onError(error);
+      }
     });
 
   supabase
@@ -100,7 +64,7 @@ function loadAndSubscribeToRouteMeta(domain: string, onData: (data: RouteMeta) =
     .subscribe();
 }
 
-function loadAndSubscribeToEvents(domain: string, onData: (data: EventData) => void, onError: (error: any) => void) {
+function loadAndSubscribeToEvents(domain: string, onData: (data: EventData) => void, onError: (error: Error) => void) {
   const supabase = getSupabaseClient()
   supabase
     .from('event')
@@ -110,6 +74,9 @@ function loadAndSubscribeToEvents(domain: string, onData: (data: EventData) => v
       data?.forEach((item) => {
         onData(item);
       });
+      if (error) {
+        onError(error);
+      }
     });
 
   supabase
@@ -128,7 +95,7 @@ function loadAndSubscribeToEvents(domain: string, onData: (data: EventData) => v
   }
 
 
-export default function EventsPage({ params }: { params: Usable<{ url: string }> }) {
+export default function EventsPage({ params }: { params: Promise<{ url: string }> }) {
   const unwrappedParams: { url: string } = React.use(params);
   const url = React.useMemo(() => unwrappedParams.url, [unwrappedParams.url])
   
@@ -169,7 +136,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
       (data) => {
         console.log("Event Data", data);
         setEvents((prevEvents) => {
-          let result = [...prevEvents, data]
+          const result = [...prevEvents, data]
           result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
           return result
       });
@@ -178,7 +145,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
         console.error("Error", error);
       }
     );
-  }, []);
+  }, [url]);
 
   const [newRoute, setNewRoute] = useState<string>("")
   const [isAddingRoute, setIsAddingRoute] = useState(false)
@@ -261,7 +228,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
         </div>
       </div>
       {/* Chart */}
-      <EventChart eventDefinitions={eventDefinitions} events={filteredEvents} />
+      <EventChart events={filteredEvents} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left column */}
         <div>

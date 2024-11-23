@@ -41,7 +41,7 @@ export default function SetupPage() {
   
       setResult('Website registered successfully!')
       window.location.href = `/results/${data.domain}`
-    } catch (error) {
+    } catch {
       setResult('Error registering website')
     } finally {
       setIsLoading(false)
