@@ -219,7 +219,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
           <div className="container mx-auto">
             <div className="flex h-16 items-center justify-between">
               <div className="flex-shrink-0">
-                <span className="text-xl font-bold">Supatrack</span>
+                <span className="text-xl font-bold" onClick={() => window.location.href = '/'}>Supatrack</span>
               </div>
               <div className="flex items-center gap-4">
                 <input
