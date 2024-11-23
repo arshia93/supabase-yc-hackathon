@@ -1,1 +1,1 @@
-npx supabase functions serve parse-url --no-verify-jwt
+npx supabase functions serve parse-url --no-verify-jwt --env-file .env

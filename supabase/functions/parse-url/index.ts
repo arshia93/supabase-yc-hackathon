@@ -4,11 +4,23 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts'
 
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
   const { url } = await req.json()
+  console.log(`wss://chrome.browserless.io?token=${Deno.env.get('PUPPETEER_BROWSERLESS_IO_KEY')}`)
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: `wss://chrome.browserless.io?token=${Deno.env.get(
+      'PUPPETEER_BROWSERLESS_IO_KEY'
+    )}`,
+  })
+  const page = await browser.newPage()
+
+  await page.goto(url)
+  // const screenshot = await page.screenshot()
+
   const data = {
     message: `Hello ${url}!`,
   }
