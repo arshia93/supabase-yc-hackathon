@@ -7,11 +7,11 @@ import { createClient } from '@supabase/supabase-js'
 import { debug } from "console";
 
 export type EventData = {
-  id: string;
-  event: string;
-  event_action: string;
-  path: string;
-  date: string;
+  domain: string;
+  route: string;
+  name: string;
+  anon_id: string;
+  created_at: string;
 };
 
 const eventData: EventData[] = [
@@ -90,6 +90,32 @@ function loadAndSubscribeToRouteMeta(domain: string, onData: (data: RouteMeta) =
     .subscribe();
 }
 
+function loadAndSubscribeToEvents(domain: string, onData: (data: EventData) => void, onError: (error: any) => void) {
+  const supabase = getSupabaseClient()
+  supabase
+    .from('event')
+    .select()
+    .eq("domain", domain)
+    .then(({ data, error }) => {
+      data?.forEach((item) => {
+        onData(item);
+      });
+    });
+
+  supabase
+    .channel("custom-all-channel")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "event" },
+      (payload) => {
+        const newData = payload.new as EventData;
+        if (newData.domain === domain) {
+          onData(newData);
+        }
+      }
+    )
+    .subscribe();
+  }
 
 
 export default function EventsPage({ params }: { params: Usable<{ url: string }> }) {
@@ -99,13 +125,27 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
   console.log("URL", url)
   const filteredData: EventData[] = []
 
-  const uniquePaths = [...new Set(eventData.map((event) => event.path))];
+  const [events, setEvents] = React.useState<EventData[]>([]);
+  const [routeMeta, setRouteMeta] = React.useState<RouteMeta[]>([]);
+
+  // const uniquePaths = [...new Set(eventData.map((event) => event.path))];
 
   React.useEffect(() => {
     loadAndSubscribeToRouteMeta(
       url,
       (data) => {
-        console.log("Data", data);
+        console.log("Route Meta", data);
+        setRouteMeta((prevRouteMeta) => [...prevRouteMeta, data]);
+      },
+      (error) => {
+        console.error("Error", error);
+      }
+    );
+    loadAndSubscribeToEvents(
+      url,
+      (data) => {
+        console.log("Event Data", data);
+        setEvents((prevEvents) => [...prevEvents, data]);
       },
       (error) => {
         console.error("Error", error);
@@ -128,11 +168,11 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
             className="w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
           >
             <option value="">All Paths</option>
-            {uniquePaths.map((path) => (
+            {/* {uniquePaths.map((path) => (
               <option key={path} value={path}>
                 {path}
               </option>
-            ))}
+            ))} */}
           </select>
         </div>
       </div>
@@ -141,7 +181,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left column */}
         <div>
-          <EventDataTable data={filteredData} />
+          <EventDataTable data={events} />
         </div>
         {/* Right column */}
         <div>{/* Live Events */}</div>
