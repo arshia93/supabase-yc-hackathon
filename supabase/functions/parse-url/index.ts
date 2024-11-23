@@ -132,7 +132,7 @@ async function getNodesToTrack(bodyHtml: string) {
     messages: [{ role: "user", content: bodyHtml }, {
       role: "user",
       content:
-        "For the provided HTML, find all element that should be tracked for analytics. Return a JSON list of the elements { haid, eventName } and nothing else. eventName should be in snake_case.",
+        "For the provided HTML, find all element that should be tracked for analytics. Return a JSON list of the elements { haid, eventName } and nothing else. eventName should be in snake_case and should be <descriptive_noun>_<past_tense_verb>.",
     }],
   });
 
