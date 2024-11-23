@@ -8,17 +8,15 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: false,
   },
   webpack: (config) => {
-    // Ignore Deno specific files
-    if (config.watchOptions) {
-      config.watchOptions.ignored = config.watchOptions.ignored || [];
-      if (Array.isArray(config.watchOptions.ignored)) {
-        config.watchOptions.ignored.push('**/supabase/functions/**');
-      }
-    } else {
-      config.watchOptions = {
-        ignored: ['**/supabase/functions/**']
-      };
+    // Create a new watchOptions object that includes both existing and new ignored patterns
+    const ignored = ['**/supabase/**']
+    if (config.watchOptions?.ignored && config.watchOptions.length > 0) {
+      ignored.push(config.watchOptions.ignored)
     }
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored
+    };
     return config;
   }
 };
