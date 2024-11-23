@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { API_KEY } from './api'
 
 export default function SetupPage() {
   const [url, setUrl] = useState('')
@@ -18,11 +19,32 @@ export default function SetupPage() {
     setIsLoading(true)
     setResult(null)
 
-    // Simulate setup process
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    setResult('Website registered successfully!')
-    setIsLoading(false)
+    // TODO: create route_meta by calling the function
+    const body = JSON.stringify({
+      url: url,
+    })
+          
+    try {
+      const response = await fetch('https://qvarloofqmysycykstty.supabase.co/functions/v1/parse-url', {
+        method: 'POST',
+        mode: "cors",
+        headers: {
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json',
+          'apikey': API_KEY
+        },
+        body: body
+      });
+  
+      const data = await response.json()
+      console.log(data)
+  
+      setResult('Website registered successfully!')
+    } catch (error) {
+      setResult('Error registering website')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const trackingScript = `<script src="https://qvarloofqmysycykstty.supabase.co/storage/v1/object/public/track/annotate.js" defer></script>`

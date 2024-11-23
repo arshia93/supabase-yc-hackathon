@@ -13,7 +13,19 @@ import * as cheerio from "https://esm.sh/cheerio@1.0.0-rc.12";
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+export const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Authorization, apikey, Content-Type",
+};
+
+console.log(`Function "parse-url" up and running!`);
+
 Deno.serve(async (req) => {
+  console.log("req", req);
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const { url } = await req.json();
   console.log(
     `wss://chrome.browserless.io?token=${
@@ -105,7 +117,7 @@ Deno.serve(async (req) => {
 
   return new Response(
     JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
 
