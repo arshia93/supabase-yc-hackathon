@@ -158,7 +158,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Website url */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-6">Analytics for Wbesite</h1>
+          <h1 className="text-2xl font-bold mb-6">{url}</h1>
         </div>
         {/* toggle paths */}
         <div className="mb-6 flex justify-end">
