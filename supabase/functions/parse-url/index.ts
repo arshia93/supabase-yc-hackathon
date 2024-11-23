@@ -11,6 +11,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as cheerio from "https://esm.sh/cheerio@1.0.0-rc.12";
 import Anthropic from "npm:@anthropic-ai/sdk";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 Deno.serve(async (req) => {
   const { url } = await req.json();
@@ -93,12 +94,14 @@ Deno.serve(async (req) => {
 
   const bodyHtml = "<body>" + body.html() + "</body>";
 
-  const data = {
+  const data: RouteMetadata = {
     domain: new URL(url).hostname,
     route: new URL(url).pathname,
-    trackingMeta: await getNodesToTrack(bodyHtml),
-    hierarchyHash: getHierarchyHash(body),
+    meta: await getNodesToTrack(bodyHtml),
+    hierarchy_hash: getHierarchyHash(body),
   };
+
+  await saveRouteMetadata(data);
 
   return new Response(
     JSON.stringify(data),
@@ -122,4 +125,25 @@ async function getNodesToTrack(bodyHtml: string) {
   });
 
   return JSON.parse(response.content[0].text);
+}
+
+type RouteMetadata = {
+  domain: string;
+  route: string;
+  meta: { haid: string; event_name: string }[];
+  hierarchy_hash: string;
+};
+
+async function saveRouteMetadata(routeMetadata: RouteMetadata) {
+  const supabase = getSupabaseClient();
+  const response = await supabase.from("route_meta").upsert(routeMetadata)
+    .select();
+  console.log("Insert route_meta response", response);
+}
+
+function getSupabaseClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+  );
 }
