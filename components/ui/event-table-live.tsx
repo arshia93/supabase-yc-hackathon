@@ -93,7 +93,8 @@ export function EventDataTableLive({ data }: EventDataTableProps) {
   console.log(data);
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="grid grid-cols-2 items-center py-4">
+        <h2 className="text-lg font-bold">Live</h2>
         <Input
           placeholder="Filter events..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
@@ -102,32 +103,6 @@ export function EventDataTableLive({ data }: EventDataTableProps) {
           }
           className="max-w-sm"
         />
-        {/* <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Paths <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu> */}
       </div>
       <div className="rounded-md border">
         <Table>

@@ -146,6 +146,10 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
     }))).flat().filter((event) => selectedPath ? event.route === selectedPath : true);
   }, [routeMeta, selectedPath]);
 
+  const filteredEvents = React.useMemo(() => {
+    return events.filter((event) => selectedPath ? event.route === selectedPath : true);
+  }, [events, selectedPath]);
+
   React.useEffect(() => {
     loadAndSubscribeToRouteMeta(
       url,
@@ -205,7 +209,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
         </div>
         {/* Right column */}
         <div>
-          <EventDataTableLive data={events} />
+          <EventDataTableLive data={filteredEvents} />
         </div>
       </div>
     </div>

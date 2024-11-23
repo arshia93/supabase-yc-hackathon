@@ -80,7 +80,8 @@ export function EventDataTable({ data }: EventDataTableProps) {
   console.log(data);
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="grid grid-cols-2 items-center py-4">
+      <h2 className="text-lg font-bold">Event Definitions</h2>
         <Input
           placeholder="Filter events..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
