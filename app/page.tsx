@@ -40,6 +40,7 @@ export default function SetupPage() {
       console.log(data)
   
       setResult('Website registered successfully!')
+      window.location.href = `/results/${data.domain}`
     } catch (error) {
       setResult('Error registering website')
     } finally {
