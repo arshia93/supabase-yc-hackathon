@@ -196,6 +196,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
         })
       });
       const data = await response.json()
+      setNewRoute("")
       console.log(data)
     } catch (error) {
       console.error("Error", error);
@@ -220,7 +221,11 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
                   value={newRoute}
                   onChange={(e) => setNewRoute(e.target.value)}
                 />
-                <button className="rounded-md bg-primary px-4 py-1.5 text-white" onClick={addRoute} disabled={isAddingRoute}>
+                <button 
+                  className={`rounded-md px-4 py-1.5 text-white ${isAddingRoute ? 'bg-gray-400' : 'bg-primary'}`}
+                  onClick={addRoute} 
+                  disabled={isAddingRoute}
+                >
                   {isAddingRoute ? "Adding..." : "Add Route"}
                 </button>
               </div>
