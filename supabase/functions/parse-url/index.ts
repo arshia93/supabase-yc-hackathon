@@ -36,6 +36,24 @@ Deno.serve(async (req) => {
   const body = $('body').clone()
   $('script', body).remove()
 
+  function getHierarchyHash(inputNode) {
+    const result: string[] = []
+    
+    function traverse($node: cheerio.Cheerio) {
+      const tagName = $node.prop('tagName')?.toLowerCase()
+      if (tagName && tagName !== 'script') {
+        result.push(tagName)
+      }
+      
+      $node.children().each((_, child) => {
+        traverse($(child))
+      }) 
+    }
+  
+    traverse(inputNode)
+    return result.join('.')
+  }
+
   // Function to get DOM path
   function getDomPath($el) {
     const path: number[] = []
@@ -72,7 +90,8 @@ Deno.serve(async (req) => {
   const data = {
     domain: new URL(url).hostname,
     route: new URL(url).pathname,
-    trackingMeta: await getNodesToTrack(bodyHtml)
+    trackingMeta: await getNodesToTrack(bodyHtml),
+    hierarchyHash: getHierarchyHash(body)
   }
 
   return new Response(
