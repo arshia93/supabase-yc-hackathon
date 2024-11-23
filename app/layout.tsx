@@ -31,7 +31,9 @@ export default function RootLayout({
         <nav className="border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center">
-              <div className="text-xl font-semibold">Supatrack</div>
+              <div className="flex-shrink-0">
+                <span className="text-xl font-bold">Supatrack</span>
+              </div>
             </div>
           </div>
         </nav>

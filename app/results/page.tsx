@@ -16,7 +16,6 @@ const initialEvents = [
   { id: 5, name: 'Video Play', selector: 'video#hero-video', approved: false },
 ]
 
-
 export default function EventsPage() {
   const [events, setEvents] = useState(initialEvents)
   const router = useRouter()
