@@ -7,12 +7,18 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     // Ignore Deno specific files
-    config.watchOptions = {
-      ...config.watchOptions,
-      ignored: [...(config.watchOptions?.ignored ?? []), '**/supabase/functions/**']
-    };
+    if (config.watchOptions) {
+      config.watchOptions.ignored = config.watchOptions.ignored || [];
+      if (Array.isArray(config.watchOptions.ignored)) {
+        config.watchOptions.ignored.push('**/supabase/functions/**');
+      }
+    } else {
+      config.watchOptions = {
+        ignored: ['**/supabase/functions/**']
+      };
+    }
     return config;
   }
 };
