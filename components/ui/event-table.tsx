@@ -36,14 +36,14 @@ export const columns: ColumnDef<EventDefinition>[] = [
     accessorKey: "route",
     header: "Route",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("route")}</div>
+      <div>{row.getValue("route")}</div>
     ),
   },
   {
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("name")}</div>
+      <div>{row.getValue("name")}</div>
     ),
   },
 

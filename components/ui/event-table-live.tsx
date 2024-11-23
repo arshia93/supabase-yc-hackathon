@@ -36,28 +36,33 @@ export const columns: ColumnDef<EventData>[] = [
     accessorKey: "route",
     header: "Route",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("route")}</div>
+      <div>{row.getValue("route")}</div>
     ),
   },
   {
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("name")}</div>
+      <div>{row.getValue("name")}</div>
     ),
   },
   {
     accessorKey: "created_at",
     header: "Created At",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("created_at")}</div>
+      <div>{new Date(row.getValue("created_at")).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric", 
+        hour: "numeric",
+        minute: "numeric"
+      })}</div>
     ),
   },
   {
     accessorKey: "anon_id",
     header: "Anonymous ID",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("anon_id")}</div>
+      <div>{row.getValue("anon_id")}</div>
     ),
   }
 ]
