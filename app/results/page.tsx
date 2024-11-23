@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
+import { CheckCircle, AlertCircle } from 'lucide-react'
 
 // Simulated events data
 const initialEvents = [
@@ -16,6 +16,15 @@ const initialEvents = [
   { id: 4, name: 'Menu Open', selector: '.menu-toggle', approved: false },
   { id: 5, name: 'Video Play', selector: 'video#hero-video', approved: false },
 ]
+
+interface CrawlResult {
+  success: boolean;
+  message: string;
+  results: {
+    step: string;
+    status: 'success' | 'warning';
+  }[];
+}
 
 export default function EventsPage() {
   const [events, setEvents] = useState(initialEvents)
