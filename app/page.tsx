@@ -25,12 +25,7 @@ export default function SetupPage() {
     setIsLoading(false)
   }
 
-  const trackingScript = `<script src="https://cdn.supatrack.com/track.js"></script>
-<script>
-  window.SupaTrack.init({
-    websiteId: "YOUR_WEBSITE_ID"
-  });
-</script>`
+  const trackingScript = `<script src="https://qvarloofqmysycykstty.supabase.co/storage/v1/object/public/track/annotate.js" defer></script>`
 
   return (
     <form onSubmit={handleSubmit}>
