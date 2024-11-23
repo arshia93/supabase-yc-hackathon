@@ -29,6 +29,7 @@ interface CrawlResult {
 export default function EventsPage() {
   const [events, setEvents] = useState(initialEvents)
   const router = useRouter()
+  const [result, setResult] = useState<CrawlResult | null>(null);
 
   function handleApproval(id: number, approved: boolean) {
     setEvents(events.map(event => 
