@@ -12,8 +12,6 @@ import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts'
 import * as cheerio from "https://esm.sh/cheerio@1.0.0-rc.12"
 import Anthropic from "npm:@anthropic-ai/sdk"
 
-console.log("Hello from Functions!")
-
 Deno.serve(async (req) => {
   const { url } = await req.json()
   console.log(`wss://chrome.browserless.io?token=${Deno.env.get('PUPPETEER_BROWSERLESS_IO_KEY')}`)
@@ -72,7 +70,8 @@ Deno.serve(async (req) => {
   const bodyHtml = '<body>' + body.html() + '</body>'
 
   const data = {
-    message: `Hello ${url}!`,
+    domain: new URL(url).hostname,
+    route: new URL(url).pathname,
     trackingMeta: await getNodesToTrack(bodyHtml)
   }
 
