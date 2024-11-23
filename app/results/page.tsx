@@ -1,75 +1,85 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Switch } from '@/components/ui/switch'
+import { useState } from "react";
+import { EventDataTable } from "@/components/ui/event-table";
+import { EventChart } from "@/components/ui/event-chart";
 
-// Simulated events data
-const initialEvents = [
-  { id: 1, name: 'Page View', selector: 'body', approved: false },
-  { id: 2, name: 'Button Click', selector: '.cta-button', approved: false },
-  { id: 3, name: 'Form Submit', selector: 'form#contact', approved: false },
-  { id: 4, name: 'Menu Open', selector: '.menu-toggle', approved: false },
-  { id: 5, name: 'Video Play', selector: 'video#hero-video', approved: false },
-]
+export type EventData = {
+  id: string;
+  event: string;
+  event_action: string;
+  path: string;
+};
+
+const eventData: EventData[] = [
+  {
+    id: "m5gr84i9",
+    event: "pay_clicked",
+    event_action: "user clicks pay button",
+    path: "/pay",
+  },
+  {
+    id: "3u1reuv4",
+    event: "signup_clicked",
+    event_action: "user clicks signup button",
+    path: "/signup",
+  },
+  {
+    id: "derv1ws0",
+    event: "login_clicked",
+    event_action: "user clicks login button",
+    path: "/login",
+  },
+  {
+    id: "5kma53ae",
+    event: "search_clicked",
+    event_action: "user clicks search button",
+    path: "/dashboard",
+  },
+  {
+    id: "bhqecj4p",
+    event: "menu_clicked",
+    event_action: "user clicks menu button",
+    path: "/dashboard",
+  },
+];
 
 export default function EventsPage() {
-  const [events, setEvents] = useState(initialEvents)
-  const router = useRouter()
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const filteredData = selectedPath
+    ? eventData.filter((event) => event.path === selectedPath)
+    : eventData;
 
-  function handleApproval(id: number, approved: boolean) {
-    setEvents(events.map(event => 
-      event.id === id ? { ...event, approved } : event
-    ))
-  }
-
-  function handleSave() {
-    // In a real application, you'd save the approved events to your backend
-    console.log('Saving approved events:', events.filter(e => e.approved))
-    router.push('/')
-  }
+  const uniquePaths = [...new Set(eventData.map((event) => event.path))];
 
   return (
     <div className="container mx-auto py-10">
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>Detected Events</CardTitle>
-          <CardDescription>Review and approve the events detected during the website crawl</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Event Name</TableHead>
-                <TableHead>Selector</TableHead>
-                <TableHead>Approve</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell>{event.name}</TableCell>
-                  <TableCell><code>{event.selector}</code></TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={event.approved}
-                      onCheckedChange={(checked) => handleApproval(event.id, checked)}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => router.push('/')}>Back</Button>
-          <Button onClick={handleSave}>Save Approved Events</Button>
-        </CardFooter>
-      </Card>
+      {/* toggle paths */}
+      <div className="mb-6">
+        <select
+          value={selectedPath || ""}
+          onChange={(e) => setSelectedPath(e.target.value || null)}
+          className="w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+        >
+          <option value="">All Paths</option>
+          {uniquePaths.map((path) => (
+            <option key={path} value={path}>
+              {path}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      {/* Chart */}
+      <EventChart />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left column */}
+        <div>
+          <EventDataTable data={filteredData} />
+        </div>
+        {/* Right column */}
+        <div>{/* Live Events */}</div>
+      </div>
     </div>
-  )
+  );
 }
-
