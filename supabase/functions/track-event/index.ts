@@ -6,7 +6,19 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+export const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Authorization, apikey, Content-Type",
+};
+
+console.log(`Function "track-event" up and running!`);
+
 Deno.serve(async (req) => {
+  console.log("req", req);
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const data = await req.json();
   await saveEvent({
     id: crypto.randomUUID(),
@@ -18,7 +30,7 @@ Deno.serve(async (req) => {
 
   return new Response(
     JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
 
