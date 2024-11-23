@@ -10,7 +10,7 @@ async function main() {
         body: { url: 'https://reactiverobot.com' },
     });
 
-    console.log(data.body)
+    console.log(data.trackingMeta)
 }
 
 main().catch(console.error);

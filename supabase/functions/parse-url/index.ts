@@ -6,13 +6,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts'
 import * as cheerio from "https://esm.sh/cheerio@1.0.0-rc.12"
-
+import Anthropic from "npm:@anthropic-ai/sdk"
 
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
   const { url } = await req.json()
   console.log(`wss://chrome.browserless.io?token=${Deno.env.get('PUPPETEER_BROWSERLESS_IO_KEY')}`)
+  
   const browser = await puppeteer.connect({
     browserWSEndpoint: `wss://chrome.browserless.io?token=${Deno.env.get(
       'PUPPETEER_BROWSERLESS_IO_KEY'
@@ -25,7 +26,8 @@ Deno.serve(async (req) => {
     waitUntil: 'networkidle0',
     timeout: 30000 // 30 seconds timeout
   })
-  const screenshot = await page.screenshot()
+  // const screenshot = await page.screenshot()
+  // const screenshotDataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...screenshot))}`
   const htmlContent = await page.content()
 
   const $ = cheerio.load(htmlContent)
@@ -45,7 +47,7 @@ Deno.serve(async (req) => {
       current = parent
     }
     
-    return path.join('-')
+    return path.join('.')
   }
 
   // Walk the DOM tree and add haid attribute
@@ -67,12 +69,8 @@ Deno.serve(async (req) => {
 
   const data = {
     message: `Hello ${url}!`,
-    htmlContent,
-    body: bodyHtml,
-    screenshot: `data:image/png;base64,${btoa(String.fromCharCode(...screenshot))}`,
+    trackingMeta: await getNodesToTrack(bodyHtml)
   }
-
-  
 
   return new Response(
     JSON.stringify(data),
@@ -80,14 +78,16 @@ Deno.serve(async (req) => {
   )
 })
 
-/* To invoke locally:
+async function getNodesToTrack(bodyHtml: string) {
+  const anthropic = new Anthropic({
+    apiKey: Deno.env.get('ANTHROPIC_API_KEY'),
+  })
 
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-20240620',
+    max_tokens: 1000,
+    messages: [{ role: 'user', content: bodyHtml}, { role: 'user', content: 'For the provided HTML, find all element that should be tracked for analytics. Return a JSON list of the elements { haid, eventName } and nothing else.' }],
+  })
 
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/parse-url' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
-
-*/
+  return JSON.parse(response.content[0].text)
+}
