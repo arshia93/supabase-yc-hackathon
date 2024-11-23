@@ -25,27 +25,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { EventData } from "@/app/results/[url]/page"
+import { EventDefinition } from "@/app/results/[url]/page"
 
 interface EventDataTableProps {
-    data: EventData[]
+    data: EventDefinition[]
   }
 
-export const columns: ColumnDef<EventData>[] = [
+export const columns: ColumnDef<EventDefinition>[] = [
   {
-    accessorKey: "event",
-    header: "Event",
+    accessorKey: "route",
+    header: "Route",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("event")}</div>
+      <div className="capitalize">{row.getValue("route")}</div>
     ),
   },
   {
-    accessorKey: "event_action",
-    header: "Event Action",
+    accessorKey: "name",
+    header: "Name",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("event_action")}</div>
+      <div className="capitalize">{row.getValue("name")}</div>
     ),
-  }
+  },
+
 ]
 
 export function EventDataTable({ data }: EventDataTableProps) {
@@ -76,14 +77,15 @@ export function EventDataTable({ data }: EventDataTableProps) {
     },
   })
 
+  console.log(data);
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter events..."
-          value={(table.getColumn("event")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("event")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

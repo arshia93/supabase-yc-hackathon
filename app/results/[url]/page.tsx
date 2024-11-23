@@ -6,6 +6,12 @@ import { EventChart } from "@/components/ui/event-chart";
 import { createClient } from '@supabase/supabase-js'
 import { debug } from "console";
 
+export type EventDefinition = {
+  name: string;
+  domain: string;
+  route: string;
+}
+
 export type EventData = {
   domain: string;
   route: string;
@@ -58,7 +64,7 @@ function getSupabaseClient() {
 
 type RouteMeta = {
   domain: string;
-  path: string;
+  route: string;
   created_at: string;
   meta: {haid: string, eventName: string}[]
 }
@@ -119,16 +125,25 @@ function loadAndSubscribeToEvents(domain: string, onData: (data: EventData) => v
 
 
 export default function EventsPage({ params }: { params: Usable<{ url: string }> }) {
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const unwrappedParams: { url: string } = React.use(params);
   const url = React.useMemo(() => unwrappedParams.url, [unwrappedParams.url])
   console.log("URL", url)
-  const filteredData: EventData[] = []
-
+  
   const [events, setEvents] = React.useState<EventData[]>([]);
   const [routeMeta, setRouteMeta] = React.useState<RouteMeta[]>([]);
+  
+  const paths = React.useMemo(() => {
+    return [...new Set(routeMeta.map((route: RouteMeta) => route.route))];
+  }, [routeMeta]);
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
 
-  // const uniquePaths = [...new Set(eventData.map((event) => event.path))];
+  const eventDefinitions = React.useMemo(() => {
+    return routeMeta.map((route: RouteMeta) => route.meta.map((meta) => ({
+      name: meta.eventName,
+      domain: route.domain,
+      route: route.route,
+    }))).flat().filter((event) => selectedPath ? event.route === selectedPath : true);
+  }, [routeMeta, selectedPath]);
 
   React.useEffect(() => {
     loadAndSubscribeToRouteMeta(
@@ -168,11 +183,11 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
             className="w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
           >
             <option value="">All Paths</option>
-            {/* {uniquePaths.map((path) => (
+            {paths.map((path) => (
               <option key={path} value={path}>
                 {path}
               </option>
-            ))} */}
+            ))}
           </select>
         </div>
       </div>
@@ -181,7 +196,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left column */}
         <div>
-          <EventDataTable data={events} />
+          <EventDataTable data={eventDefinitions} />
         </div>
         {/* Right column */}
         <div>{/* Live Events */}</div>
