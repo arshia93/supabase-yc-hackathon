@@ -224,13 +224,13 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
               <div className="flex items-center gap-4">
                 <input
                   type="text"
-                  className="rounded-md border border-gray-300 px-3 py-1.5"
+                  className="rounded-md border border-gray-300 px-3 py-1"
                   placeholder="/pricing"
                   value={newRoute}
                   onChange={(e) => setNewRoute(e.target.value)}
                 />
                 <button 
-                  className={`rounded-md px-4 py-1.5 text-white ${isAddingRoute ? 'bg-gray-400' : 'bg-primary'}`}
+                  className={`rounded-md px-4 py-1 text-white ${isAddingRoute ? 'bg-gray-400' : 'bg-primary'}`}
                   onClick={addRoute} 
                   disabled={isAddingRoute}
                 >
@@ -240,7 +240,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
             </div>
           </div>
         </nav>
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Website url */}
           <h1 className="text-2xl font-bold mb-6">{url}</h1>
