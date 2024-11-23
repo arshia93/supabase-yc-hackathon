@@ -9,6 +9,7 @@ export type EventData = {
   event: string;
   event_action: string;
   path: string;
+  date: string;
 };
 
 const eventData: EventData[] = [
@@ -17,30 +18,35 @@ const eventData: EventData[] = [
     event: "pay_clicked",
     event_action: "user clicks pay button",
     path: "/pay",
+    date: "2024-04-01",
   },
   {
     id: "3u1reuv4",
     event: "signup_clicked",
     event_action: "user clicks signup button",
     path: "/signup",
+    date: "2024-04-01",
   },
   {
     id: "derv1ws0",
     event: "login_clicked",
     event_action: "user clicks login button",
     path: "/login",
+    date: "2024-04-01",
   },
   {
     id: "5kma53ae",
     event: "search_clicked",
     event_action: "user clicks search button",
     path: "/dashboard",
+    date: "2024-04-01",
   },
   {
     id: "bhqecj4p",
     event: "menu_clicked",
     event_action: "user clicks menu button",
     path: "/dashboard",
+    date: "2024-04-01",
   },
 ];
 
@@ -54,22 +60,27 @@ export default function EventsPage() {
 
   return (
     <div className="container mx-auto py-10">
-      {/* toggle paths */}
-      <div className="mb-6">
-        <select
-          value={selectedPath || ""}
-          onChange={(e) => setSelectedPath(e.target.value || null)}
-          className="w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-        >
-          <option value="">All Paths</option>
-          {uniquePaths.map((path) => (
-            <option key={path} value={path}>
-              {path}
-            </option>
-          ))}
-        </select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Website url */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-6">Analytics for Wbesite</h1>
+        </div>
+        {/* toggle paths */}
+        <div className="mb-6 flex justify-end">
+          <select
+            value={selectedPath || ""}
+            onChange={(e) => setSelectedPath(e.target.value || null)}
+            className="w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+          >
+            <option value="">All Paths</option>
+            {uniquePaths.map((path) => (
+              <option key={path} value={path}>
+                {path}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-      
       {/* Chart */}
       <EventChart />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
