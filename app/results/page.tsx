@@ -57,7 +57,7 @@ export default function EventsPage() {
                   <TableCell>
                     <Switch
                       checked={event.approved}
-                      onCheckedChange={(checked) => handleApproval(event.id, checked)}
+                      onCheckedChange={(checked: any) => handleApproval(event.id, checked)}
                     />
                   </TableCell>
                 </TableRow>

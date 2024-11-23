@@ -19,10 +19,11 @@ Deno.serve(async (req) => {
   const page = await browser.newPage()
 
   await page.goto(url)
-  // const screenshot = await page.screenshot()
+  const htmlContent = await page.content()
 
   const data = {
     message: `Hello ${url}!`,
+    htmlContent,
   }
 
   return new Response(
