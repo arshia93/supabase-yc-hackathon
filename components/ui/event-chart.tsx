@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { EventData, EventDefinition } from "@/app/results/[url]/page"
 const chartData = [
   { date: "2024-04-01", desktop: 222, mobile: 150 },
   { date: "2024-04-02", desktop: 97, mobile: 180 },
@@ -120,33 +121,48 @@ const chartData = [
 ]
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  desktop: {
-    label: "Desktop",
-    color: "hsl(var(--chart-1))",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2))",
+  events: {
+    label: "Events",
   },
 } satisfies ChartConfig
 
-export function EventChart() {
-  const [timeRange, setTimeRange] = React.useState("90d")
+function bucketEventsByHour(events: EventData[]): { date: string, events: number }[] {
+  const buckets = new Map<string, number>();
+  
+  events.forEach(event => {
+    // Convert to local date string in ISO format, truncated to hour
+    const date = new Date(event.created_at);
+    const hourKey = date.toISOString().slice(0, 13) + ':00:00.000Z';
+    
+    // Increment count for this hour
+    buckets.set(hourKey, (buckets.get(hourKey) || 0) + 1);
+  });
 
-  const filteredData = chartData.filter((item) => {
+  // Convert map to array of objects sorted by date
+  return Array.from(buckets.entries())
+    .map(([date, events]) => ({
+      date,
+      events
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
+
+export function EventChart({ eventDefinitions, events }: { eventDefinitions: EventDefinition[], events: EventData[] }) {
+  const [timeRange, setTimeRange] = React.useState("12hr")
+  
+  const bucketedEvents = bucketEventsByHour(events);
+
+  const filteredData = bucketedEvents.filter((item) => {
     const date = new Date(item.date)
-    const referenceDate = new Date("2024-06-30")
-    let daysToSubtract = 90
-    if (timeRange === "30d") {
-      daysToSubtract = 30
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7
+    const now = new Date()
+    let hoursToSubtract = 48
+    if (timeRange === "24hr") {
+      hoursToSubtract = 24
+    } else if (timeRange === "12hr") {
+      hoursToSubtract = 12
     }
-    const startDate = new Date(referenceDate)
-    startDate.setDate(startDate.getDate() - daysToSubtract)
+    const startDate = new Date(now.getTime() - (hoursToSubtract * 60 * 60 * 1000))
     return date >= startDate
   })
 
@@ -167,14 +183,14 @@ export function EventChart() {
             <SelectValue placeholder="Last 3 months" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            <SelectItem value="90d" className="rounded-lg">
-              Last 3 months
+            <SelectItem value="48hr" className="rounded-lg">
+              Last 48 hours
             </SelectItem>
-            <SelectItem value="30d" className="rounded-lg">
-              Last 30 days
+            <SelectItem value="24hr" className="rounded-lg">
+              Last 24 hours  
             </SelectItem>
-            <SelectItem value="7d" className="rounded-lg">
-              Last 7 days
+            <SelectItem value="12hr" className="rounded-lg">
+              Last 12 hours
             </SelectItem>
           </SelectContent>
         </Select>
@@ -186,27 +202,15 @@ export function EventChart() {
         >
           <AreaChart data={filteredData}>
             <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="fillEvents" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
-                  stopColor="var(--color-desktop)"
+                  stopColor="var(--color-events)"
                   stopOpacity={0.8}
                 />
                 <stop
                   offset="95%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-mobile)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-mobile)"
+                  stopColor="var(--color-events)"
                   stopOpacity={0.1}
                 />
               </linearGradient>
@@ -220,9 +224,9 @@ export function EventChart() {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value)
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
+                return date.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "numeric"
                 })
               }}
             />
@@ -231,9 +235,12 @@ export function EventChart() {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    const date = new Date(value)
+                    return date.toLocaleString("en-US", {
                       month: "short",
                       day: "numeric",
+                      hour: "numeric",
+                      minute: "numeric"
                     })
                   }}
                   indicator="dot"
@@ -241,18 +248,10 @@ export function EventChart() {
               }
             />
             <Area
-              dataKey="mobile"
+              dataKey="events"
               type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-mobile)"
-              stackId="a"
-            />
-            <Area
-              dataKey="desktop"
-              type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-desktop)"
-              stackId="a"
+              fill="url(#fillEvents)"
+              stroke="var(--color-events)"
             />
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>

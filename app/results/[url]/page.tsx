@@ -201,7 +201,7 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
         </div>
       </div>
       {/* Chart */}
-      <EventChart />
+      <EventChart eventDefinitions={eventDefinitions} events={filteredEvents} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left column */}
         <div>
