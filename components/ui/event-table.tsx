@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { EventData } from "@/app/results/page"
+import { EventData } from "@/app/results/[url]/page"
 
 interface EventDataTableProps {
     data: EventData[]
