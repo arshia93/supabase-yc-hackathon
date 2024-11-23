@@ -53,9 +53,44 @@ const eventData: EventData[] = [
 ];
 
 function getSupabaseClient() {
-  console.log(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!)
 }
+
+type RouteMeta = {
+  domain: string;
+  path: string;
+  created_at: string;
+  meta: {haid: string, eventName: string}[]
+}
+
+function loadAndSubscribeToRouteMeta(domain: string, onData: (data: RouteMeta) => void, onError: (error: any) => void) {
+  const supabase = getSupabaseClient()
+  supabase
+    .from('route_meta')
+    .select()
+    .eq("domain", domain)
+    .then(({ data, error }) => {
+      data?.forEach((item) => {
+        onData(item);
+      });
+    });
+
+  supabase
+    .channel("custom-all-channel")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "route_meta" },
+      (payload) => {
+        const newData = payload.new as RouteMeta;
+        if (newData.domain === domain) {
+          onData(newData);
+        }
+      }
+    )
+    .subscribe();
+}
+
+
 
 export default function EventsPage({ params }: { params: Usable<{ url: string }> }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -66,16 +101,16 @@ export default function EventsPage({ params }: { params: Usable<{ url: string }>
 
   const uniquePaths = [...new Set(eventData.map((event) => event.path))];
 
-  
-  const supabase = getSupabaseClient()
   React.useEffect(() => {
-    supabase
-      .from("route_meta")
-      .select()
-      .then(({ data, error }) => {
+    loadAndSubscribeToRouteMeta(
+      url,
+      (data) => {
         console.log("Data", data);
-        console.log("Error", error);
-      });
+      },
+      (error) => {
+        console.error("Error", error);
+      }
+    );
   }, []);
 
   return (
