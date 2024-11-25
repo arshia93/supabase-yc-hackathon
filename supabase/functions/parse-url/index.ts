@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
   }
 
   const { url, html } = await req.json();
-  const htmlContent = await getHtmlContentForUrl(url);
+  const htmlContent = html ? html : await getHtmlContentForUrl(url);
 
   const $ = cheerio.load(htmlContent);
   const body = $("body").clone();
