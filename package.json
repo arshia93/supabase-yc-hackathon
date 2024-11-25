@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "tsc -p tsconfig.json && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "bundle": "esbuild bundle/index.ts --bundle --minify --outfile=dist.js",
+    "upload": "ts-node bundle/upload.ts",
+    "deploy-bundle": "npm run bundle && npm run upload"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
@@ -22,6 +25,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
+    "esbuild": "^0.24.0",
     "jsdom": "^25.0.1",
     "lucide-react": "^0.460.0",
     "next": "15.0.3",
