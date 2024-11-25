@@ -24,47 +24,13 @@ Deno.serve(async (req) => {
   const body = $("body").clone();
   $("script", body).remove();
 
-  function getHierarchyHash(inputNode: cheerio.Cheerio) {
-    const result: string[] = [];
-
-    function traverse($node: cheerio.Cheerio) {
-      const tagName = $node.prop("tagName")?.toLowerCase();
-      if (tagName && tagName !== "script") {
-        result.push(tagName);
-      }
-
-      $node.children().each((_, child: cheerio.Cheerio) => {
-        traverse($(child));
-      });
-    }
-
-    traverse(inputNode);
-    return result.join(".");
-  }
-
-  // Walk the DOM tree and add haid attribute
-  function addHaidAttribute($el: cheerio.Cheerio) {
-    const tagName = $el.prop("tagName")?.toLowerCase() || "text";
-    const path = getDomPath($el);
-    $el.attr("haid", `${tagName}-${path}`);
-
-    // Recursively process child nodes
-    // deno-lint-ignore no-explicit-any
-    $el.children().each((_: any, child: cheerio.Cheerio) => {
-      addHaidAttribute($(child));
-    });
-  }
-
-  // Start from body and process entire tree
-  addHaidAttribute(body);
-
-  const bodyHtml = "<body>" + body.html() + "</body>";
+  addHaidAttribute($, body);
 
   const data: RouteMetadata = {
     domain: new URL(url).hostname,
     route: new URL(url).pathname,
-    meta: await getNodesToTrack(bodyHtml),
-    hierarchy_hash: getHierarchyHash(body),
+    meta: await getNodesToTrack("<body>" + body.html() + "</body>"),
+    hierarchy_hash: getHierarchyHash($, body),
   };
 
   console.log("RouteMeta", data);
@@ -76,6 +42,36 @@ Deno.serve(async (req) => {
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
+
+function getHierarchyHash(dollar: cheerio.Cheerio, inputNode: cheerio.Cheerio) {
+  const result: string[] = [];
+
+  function traverse($node: cheerio.Cheerio) {
+    const tagName = $node.prop("tagName")?.toLowerCase();
+    if (tagName && tagName !== "script") {
+      result.push(tagName);
+    }
+
+    $node.children().each((_, child: cheerio.Cheerio) => {
+      traverse(dollar(child));
+    });
+  }
+
+  traverse(inputNode);
+  return result.join(".");
+}
+
+function addHaidAttribute(dollar: cheerio.Cheerio, $el: cheerio.Cheerio) {
+  const tagName = $el.prop("tagName")?.toLowerCase() || "text";
+  const path = getDomPath($el);
+  $el.attr("haid", `${tagName}-${path}`);
+
+  // Recursively process child nodes
+  // deno-lint-ignore no-explicit-any
+  $el.children().each((_: any, child: cheerio.Cheerio) => {
+    addHaidAttribute(dollar, dollar(child));
+  });
+}
 
 function getDomPath($el: cheerio.Cheerio) {
   const path: number[] = [];
