@@ -1,3 +1,19 @@
+interface TrackingPayloadItem {
+  eventName: string;
+  haid: string;
+}
+
+interface TrackedElement {
+  eventName: string;
+  element: HTMLElement;
+}
+
+type RouteMeta = {
+  domain: string;
+  route: string;
+  meta: TrackingPayloadItem[];
+};
+
 function selectNode(haid: string): HTMLElement {
   const path = haid.split("-")[1].split(".");
   let current = document.body;
@@ -10,15 +26,11 @@ function selectNode(haid: string): HTMLElement {
 const API_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2YXJsb29mcW15c3ljeWtzdHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIzMzYzNTEsImV4cCI6MjA0NzkxMjM1MX0.SKF5LsyqW8f3S0FZYIL3eD5VhOhlJmKyRqrAwSETYQI";
 
-async function getRouteMeta(): Promise<any> {
-  let domain = window.location.hostname;
-  if (domain.includes("localhost")) {
-    domain = "reactiverobot.com";
-  }
+async function getRouteMeta(): Promise<RouteMeta[] | null> {
   const route = window.location.pathname;
 
   return fetch(
-    `https://qvarloofqmysycykstty.supabase.co/rest/v1/route_meta?domain=eq.${domain}&route=eq.${route}&select=*`,
+    `https://qvarloofqmysycykstty.supabase.co/rest/v1/route_meta?domain=eq.${getDomain()}&route=eq.${route}&select=*`,
     {
       headers: {
         "apikey": API_KEY,
@@ -34,12 +46,17 @@ async function getRouteMeta(): Promise<any> {
     });
 }
 
+function getDomain(): string {
+  let domain = window.location.hostname;
+  if (domain.includes("localhost")) {
+    domain = "reactiverobot.com";
+  }
+  return domain;
+}
+
 async function doTrack(eventName: string): Promise<Response | null> {
   try {
-    let domain = window.location.hostname;
-    if (domain.includes("localhost")) {
-      domain = "reactiverobot.com";
-    }
+    const domain = getDomain();
     const route = window.location.pathname;
 
     const body = JSON.stringify({
@@ -79,14 +96,41 @@ async function doTrack(eventName: string): Promise<Response | null> {
   }
 }
 
-interface TrackingPayloadItem {
-  eventName: string;
-  haid: string;
-}
+async function createRouteMeta(): Promise<RouteMeta | null> {
+  try {
+    const body = JSON.stringify({
+      url: window.location.href,
+      html: document.documentElement.outerHTML,
+    });
 
-interface TrackedElement {
-  eventName: string;
-  element: HTMLElement;
+    const response = await fetch(
+      "https://qvarloofqmysycykstty.supabase.co/functions/v1/parse-url",
+      {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Authorization": `Bearer ${API_KEY}`,
+          "Content-Type": "application/json",
+          "apikey": API_KEY,
+        },
+        body: body,
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result = await response.json();
+    console.debug(
+      `Created route meta for ${window.location.href}`,
+    );
+    return result;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error creating route meta:", error.message);
+    }
+    return null;
+  }
 }
 
 function selectNodes(payload: TrackingPayloadItem[]): TrackedElement[] {
@@ -100,21 +144,12 @@ function annotateOnClick(elements: TrackedElement[]): void {
   elements.forEach(({ eventName, element }) => {
     const originalOnClick = element.onclick;
     element.onclick = async (e: MouseEvent) => {
-      // Prevent default behavior
       e.preventDefault();
-
-      // Wait for tracking to complete
       await doTrack(eventName);
-
-      // If this is a link, get the href
       const href = (element as HTMLAnchorElement).href;
-
-      // Execute original click handler if it exists
       if (originalOnClick) {
         originalOnClick.call(element, e);
       }
-
-      // If this was a link, navigate to the href
       if (href) {
         window.location.href = href;
       }
@@ -182,12 +217,26 @@ function getAnonymousId(): string {
 
 window.addEventListener("load", async function () {
   const routeMeta = await getRouteMeta();
-  if (routeMeta && routeMeta.length > 0) {
+
+  const setupTracking = async (meta: RouteMeta) => {
     console.debug(
-      `Loaded route meta for ${routeMeta[0].domain}${routeMeta[0].route}`,
+      `Loaded route meta for ${meta.domain}${meta.route}`,
     );
-    console.debug(`Annotating ${routeMeta[0].meta.length} elements`);
-    annotateOnClick(selectNodes(routeMeta[0].meta));
+    console.debug(`Annotating ${meta.meta.length} elements`);
+    annotateOnClick(selectNodes(meta.meta));
     doTrack("page_view");
+  };
+
+  if (routeMeta && routeMeta.length === 1) {
+    await setupTracking(routeMeta[0]);
+  } else {
+    console.debug("No route meta found, creating...");
+    const newMeta = await createRouteMeta();
+    if (newMeta) {
+      console.debug("Route meta created. Beginning tracking.");
+      await setupTracking(newMeta);
+    } else {
+      console.debug("Failed to create route meta.");
+    }
   }
 });
