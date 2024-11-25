@@ -1,12 +1,3 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
-// steps:
-// install deno
-// insall deno vscode plugin
-
-// Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as cheerio from "https://esm.sh/cheerio@1.0.0-rc.12";
@@ -26,30 +17,8 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const { url } = await req.json();
-  console.log(
-    `wss://chrome.browserless.io?token=${
-      Deno.env.get("PUPPETEER_BROWSERLESS_IO_KEY")
-    }`,
-  );
-
-  const browser = await puppeteer.connect({
-    browserWSEndpoint: `wss://chrome.browserless.io?token=${
-      Deno.env.get(
-        "PUPPETEER_BROWSERLESS_IO_KEY",
-      )
-    }`,
-  });
-  const page = await browser.newPage();
-
-  // Wait until network is idle (no requests for 500ms)
-  await page.goto(url, {
-    waitUntil: "networkidle0",
-    timeout: 30000, // 30 seconds timeout
-  });
-  // const screenshot = await page.screenshot()
-  // const screenshotDataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...screenshot))}`
-  const htmlContent = await page.content();
+  const { url, html } = await req.json();
+  const htmlContent = await getHtmlContentForUrl(url);
 
   const $ = cheerio.load(htmlContent);
   const body = $("body").clone();
@@ -71,21 +40,6 @@ Deno.serve(async (req) => {
 
     traverse(inputNode);
     return result.join(".");
-  }
-
-  // Function to get DOM path
-  function getDomPath($el: cheerio.Cheerio) {
-    const path: number[] = [];
-    let current = $el;
-    while (current.parent().length) {
-      const parent = current.parent();
-      const children = parent.children();
-      const index = children.index(current);
-      path.unshift(index);
-      current = parent;
-    }
-
-    return path.join(".");
   }
 
   // Walk the DOM tree and add haid attribute
@@ -113,6 +67,8 @@ Deno.serve(async (req) => {
     hierarchy_hash: getHierarchyHash(body),
   };
 
+  console.log("RouteMeta", data);
+
   await saveRouteMetadata(data);
 
   return new Response(
@@ -120,6 +76,45 @@ Deno.serve(async (req) => {
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
+
+function getDomPath($el: cheerio.Cheerio) {
+  const path: number[] = [];
+  let current = $el;
+  while (current.parent().length) {
+    const parent = current.parent();
+    const children = parent.children();
+    const index = children.index(current);
+    path.unshift(index);
+    current = parent;
+  }
+
+  return path.join(".");
+}
+
+async function getHtmlContentForUrl(url: string) {
+  console.log(
+    `wss://chrome.browserless.io?token=${
+      Deno.env.get("PUPPETEER_BROWSERLESS_IO_KEY")
+    }`,
+  );
+
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: `wss://chrome.browserless.io?token=${
+      Deno.env.get(
+        "PUPPETEER_BROWSERLESS_IO_KEY",
+      )
+    }`,
+  });
+  const page = await browser.newPage();
+
+  // Wait until network is idle (no requests for 500ms)
+  await page.goto(url, {
+    waitUntil: "networkidle0",
+    timeout: 30000, // 30 seconds timeout
+  });
+  const htmlContent = await page.content();
+  return htmlContent;
+}
 
 async function getNodesToTrack(bodyHtml: string) {
   const anthropic = new Anthropic({
