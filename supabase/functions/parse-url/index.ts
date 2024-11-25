@@ -20,21 +20,9 @@ Deno.serve(async (req) => {
   const { url, html } = await req.json();
   const htmlContent = html ? html : await getHtmlContentForUrl(url);
 
-  const $ = cheerio.load(htmlContent);
-  const body = $("body").clone();
-  $("script", body).remove();
-
-  addHaidAttribute($, body);
-
-  const data: RouteMetadata = {
-    domain: new URL(url).hostname,
-    route: new URL(url).pathname,
-    meta: await getNodesToTrack("<body>" + body.html() + "</body>"),
-    hierarchy_hash: getHierarchyHash($, body),
-  };
+  const data = await routeMetadataFromHtml(url, htmlContent);
 
   console.log("RouteMeta", data);
-
   await saveRouteMetadata(data);
 
   return new Response(
@@ -59,6 +47,23 @@ function getHierarchyHash(dollar: cheerio.Cheerio, inputNode: cheerio.Cheerio) {
 
   traverse(inputNode);
   return result.join(".");
+}
+
+async function routeMetadataFromHtml(url: string, htmlContent: string) {
+  const $ = cheerio.load(htmlContent);
+  const body = $("body").clone();
+  $("script", body).remove();
+
+  addHaidAttribute($, body);
+
+  const data: RouteMetadata = {
+    domain: new URL(url).hostname,
+    route: new URL(url).pathname,
+    meta: await getNodesToTrack("<body>" + body.html() + "</body>"),
+    hierarchy_hash: getHierarchyHash($, body),
+  };
+
+  return data;
 }
 
 function addHaidAttribute(dollar: cheerio.Cheerio, $el: cheerio.Cheerio) {
