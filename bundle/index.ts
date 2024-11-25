@@ -66,7 +66,7 @@ async function doTrack(eventName: string): Promise<Response | null> {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    console.log(
+    console.debug(
       `Event ${eventName} for ${domain}${route} for anon_id=${getAnonymousId()}`,
     );
     return response;
@@ -121,19 +121,6 @@ function annotateOnClick(elements: TrackedElement[]): void {
     };
   });
 }
-
-window.addEventListener("load", async function () {
-  const routeMeta = await getRouteMeta();
-  if (routeMeta && routeMeta.length > 0) {
-    console.log(
-      `Loaded route meta for ${routeMeta[0].domain}${routeMeta[0].route}`,
-    );
-    console.log(`Annotating ${routeMeta[0].meta.length} elements`);
-    console.debug(routeMeta[0].meta);
-    annotateOnClick(selectNodes(routeMeta[0].meta));
-    doTrack("page_view");
-  }
-});
 
 function domNodeId(element: HTMLElement): string {
   return `${element.tagName.toLowerCase()}-${domPath(element).join(".")}`;
@@ -192,3 +179,15 @@ function getAnonymousId(): string {
   };path=/`;
   return newId;
 }
+
+window.addEventListener("load", async function () {
+  const routeMeta = await getRouteMeta();
+  if (routeMeta && routeMeta.length > 0) {
+    console.debug(
+      `Loaded route meta for ${routeMeta[0].domain}${routeMeta[0].route}`,
+    );
+    console.debug(`Annotating ${routeMeta[0].meta.length} elements`);
+    annotateOnClick(selectNodes(routeMeta[0].meta));
+    doTrack("page_view");
+  }
+});

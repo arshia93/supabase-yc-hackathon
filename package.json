@@ -7,7 +7,8 @@
     "build": "tsc -p tsconfig.json && next build",
     "start": "next start",
     "lint": "next lint",
-    "bundle": "esbuild bundle/index.ts --bundle --minify --outfile=dist.js",
+    "bundle": "esbuild bundle/index.ts --bundle --minify --outfile=bundle/dist.js",
+    "bundle:watch": "esbuild bundle/index.ts --bundle --watch=forever --outfile=bundle/dist-dev.js & bundle/serve.sh",
     "upload": "ts-node bundle/upload.ts",
     "deploy-bundle": "npm run bundle && npm run upload"
   },
