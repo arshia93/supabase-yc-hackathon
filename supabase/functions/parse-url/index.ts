@@ -6,29 +6,42 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Authorization, apikey, Content-Type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 console.log(`Function "parse-url" up and running!`);
 
 Deno.serve(async (req) => {
-  console.log("req", req);
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const { url, html } = await req.json();
-  const htmlContent = html ? html : await getHtmlContentForUrl(url);
+  try {
+    const { url, html } = await req.json();
+    const htmlContent = html ? html : await getHtmlContentForUrl(url);
+    const data = await routeMetadataFromHtml(url, htmlContent);
+    
+    console.log("RouteMeta", data);
+    await saveRouteMetadata(data);
 
-  const data = await routeMetadataFromHtml(url, htmlContent);
-
-  console.log("RouteMeta", data);
-  await saveRouteMetadata(data);
-
-  return new Response(
-    JSON.stringify(data),
-    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-  );
+    return new Response(JSON.stringify(data), { 
+      headers: { 
+        ...corsHeaders, 
+        "Content-Type": "application/json"
+      } 
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500,
+      headers: { 
+        ...corsHeaders, 
+        "Content-Type": "application/json"
+      }
+    });
+  }
 });
 
 function getHierarchyHash(dollar: cheerio.Cheerio, inputNode: cheerio.Cheerio) {
