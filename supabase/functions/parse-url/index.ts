@@ -15,110 +15,42 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Authorization, apikey, Content-Type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 console.log(`Function "parse-url" up and running!`);
 
 Deno.serve(async (req) => {
-  console.log("req", req);
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const { url } = await req.json();
-  console.log(
-    `wss://chrome.browserless.io?token=${
-      Deno.env.get("PUPPETEER_BROWSERLESS_IO_KEY")
-    }`,
-  );
+  try {
+    const { url, html } = await req.json();
+    const htmlContent = html ? html : await getHtmlContentForUrl(url);
+    const data = await routeMetadataFromHtml(url, htmlContent);
+    
+    console.log("RouteMeta", data);
+    await saveRouteMetadata(data);
 
-  const browser = await puppeteer.connect({
-    browserWSEndpoint: `wss://chrome.browserless.io?token=${
-      Deno.env.get(
-        "PUPPETEER_BROWSERLESS_IO_KEY",
-      )
-    }`,
-  });
-  const page = await browser.newPage();
-
-  // Wait until network is idle (no requests for 500ms)
-  await page.goto(url, {
-    waitUntil: "networkidle0",
-    timeout: 30000, // 30 seconds timeout
-  });
-  // const screenshot = await page.screenshot()
-  // const screenshotDataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...screenshot))}`
-  const htmlContent = await page.content();
-
-  const $ = cheerio.load(htmlContent);
-  const body = $("body").clone();
-  $("script", body).remove();
-
-  function getHierarchyHash(inputNode: cheerio.Cheerio) {
-    const result: string[] = [];
-
-    function traverse($node: cheerio.Cheerio) {
-      const tagName = $node.prop("tagName")?.toLowerCase();
-      if (tagName && tagName !== "script") {
-        result.push(tagName);
+    return new Response(JSON.stringify(data), { 
+      headers: { 
+        ...corsHeaders, 
+        "Content-Type": "application/json"
+      } 
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500,
+      headers: { 
+        ...corsHeaders, 
+        "Content-Type": "application/json"
       }
-
-      $node.children().each((_, child: cheerio.Cheerio) => {
-        traverse($(child));
-      });
-    }
-
-    traverse(inputNode);
-    return result.join(".");
-  }
-
-  // Function to get DOM path
-  function getDomPath($el: cheerio.Cheerio) {
-    const path: number[] = [];
-    let current = $el;
-    while (current.parent().length) {
-      const parent = current.parent();
-      const children = parent.children();
-      const index = children.index(current);
-      path.unshift(index);
-      current = parent;
-    }
-
-    return path.join(".");
-  }
-
-  // Walk the DOM tree and add haid attribute
-  function addHaidAttribute($el: cheerio.Cheerio) {
-    const tagName = $el.prop("tagName")?.toLowerCase() || "text";
-    const path = getDomPath($el);
-    $el.attr("haid", `${tagName}-${path}`);
-
-    // Recursively process child nodes
-    // deno-lint-ignore no-explicit-any
-    $el.children().each((_: any, child: cheerio.Cheerio) => {
-      addHaidAttribute($(child));
     });
   }
-
-  // Start from body and process entire tree
-  addHaidAttribute(body);
-
-  const bodyHtml = "<body>" + body.html() + "</body>";
-
-  const data: RouteMetadata = {
-    domain: new URL(url).hostname,
-    route: new URL(url).pathname,
-    meta: await getNodesToTrack(bodyHtml),
-    hierarchy_hash: getHierarchyHash(body),
-  };
-
-  await saveRouteMetadata(data);
-
-  return new Response(
-    JSON.stringify(data),
-    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-  );
 });
 
 async function getNodesToTrack(bodyHtml: string) {
