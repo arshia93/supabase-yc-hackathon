@@ -50,7 +50,7 @@ export default function SetupPage() {
       window.location.href = `/results/${data.domain}`
     } catch (error) {
       console.error("Error details:", error)
-      setResult(`Error registering website: ${error.message}`)
+      setResult(`Error registering website: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsLoading(false)
     }
