@@ -19,7 +19,6 @@ export default function SetupPage() {
     setIsLoading(true)
     setResult(null)
 
-    // TODO: create route_meta by calling the function
     const body = JSON.stringify({
       url: url,
     })
@@ -36,13 +35,22 @@ export default function SetupPage() {
         body: body
       });
   
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
       const data = await response.json()
-      console.log(data)
+      console.log("Response data:", data)
+  
+      if (!data.domain) {
+        throw new Error(`Invalid response: ${JSON.stringify(data)}`);
+      }
   
       setResult('Website registered successfully!')
       window.location.href = `/results/${data.domain}`
-    } catch {
-      setResult('Error registering website')
+    } catch (error) {
+      console.error("Error details:", error)
+      setResult(`Error registering website: ${error.message}`)
     } finally {
       setIsLoading(false)
     }
