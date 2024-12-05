@@ -91,3 +91,44 @@ function getSupabaseClient() {
     Deno.env.get("SUPABASE_ANON_KEY") ?? "",
   );
 }
+
+async function getHtmlContentForUrl(url: string) {
+  console.log(
+    `wss://chrome.browserless.io?token=${
+      Deno.env.get("PUPPETEER_BROWSERLESS_IO_KEY")
+    }`,
+  );
+
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: `wss://chrome.browserless.io?token=${
+      Deno.env.get("PUPPETEER_BROWSERLESS_IO_KEY")
+    }`,
+  });
+  const page = await browser.newPage();
+
+  try {
+    // Wait until network is idle (no requests for 500ms)
+    await page.goto(url, {
+      waitUntil: "networkidle0",
+      timeout: 30000, // 30 seconds timeout
+    });
+    const htmlContent = await page.content();
+    return htmlContent;
+  } finally {
+    await browser.close();
+  }
+}
+
+async function routeMetadataFromHtml(url: string, htmlContent: string): Promise<RouteMetadata> {
+  const domain = new URL(url).hostname;
+  const route = new URL(url).pathname;
+  const $ = cheerio.load(htmlContent);
+  const meta = await getNodesToTrack($.html());
+  
+  return {
+    domain,
+    route,
+    meta,
+    hierarchy_hash: crypto.randomUUID(),
+  };
+}
